@@ -72,10 +72,14 @@ func (cc *jobcontroller) killJob(jobInfo *apis.JobInfo, podRetainPhase state.Pha
 			if job.Status.RetryCount >= maxRetry-1 {
 				lastRetry = true
 			}
+			// Only retain the Failed and Succeeded pods at the last retry
+			retainPhase := podRetainPhase
+			if lastRetry {
+				retainPhase = state.PodRetainPhaseSoft
+			}
+			_, retain := retainPhase[pod.Status.Phase]
 
-			_, retain := podRetainPhase[pod.Status.Phase]
-
-			if !retain && !lastRetry {
+			if !retain {
 				err := cc.deleteJobPod(job.Name, pod)
 				if err == nil {
 					terminating++
