@@ -82,8 +82,10 @@ var _ = Describe("Test job restart on last retry", func() {
 		fmt.Println("=============1=============", string(raw))
 		fmt.Println("=============2=============", curjob.Status.RetryCount)
 		pods := e2eutil.GetTasksOfJob(ctx, job)
-		raw, _ = json.Marshal(pods)
-		fmt.Println("=============3=============", string(raw))
+		for _, p := range pods {
+			fmt.Println("=============3==============", p.Name, p.Namespace, p.Status.Phase)
+			fmt.Println("=============4==============", p.Status.ContainerStatuses)
+		}
 
 		err = e2eutil.WaitPodGone(ctx, jobctl.MakePodName(jobName, "running-task", 0), job.Namespace)
 		Expect(err).NotTo(HaveOccurred())
