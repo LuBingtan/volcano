@@ -70,7 +70,7 @@ var _ = Describe("Test job restart on last retry", func() {
 		})
 
 		// wait job failed
-		err := e2eutil.WaitJobPhases(ctx, job, []vcbatch.JobPhase{vcbatch.Failed})
+		err := e2eutil.WaitJobStates(ctx, job, []vcbatch.JobPhase{vcbatch.Failed}, e2eutil.FiveMinute)
 		Expect(err).NotTo(HaveOccurred())
 
 		// wait running pod deleted
