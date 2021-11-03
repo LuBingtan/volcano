@@ -18,6 +18,7 @@ package jobp
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	. "github.com/onsi/ginkgo"
@@ -47,7 +48,7 @@ var _ = Describe("Test job restart on last retry", func() {
 				{Event: v1alpha1.PodEvictedEvent, Action: v1alpha1.RestartJobAction},
 				{Event: v1alpha1.PodFailedEvent, Action: v1alpha1.RestartJobAction},
 			},
-			MaxRetry: 1,
+			MaxRetry: 2,
 			Tasks: []e2eutil.TaskSpec{
 				{
 					Name:          "running-task",
@@ -77,9 +78,13 @@ var _ = Describe("Test job restart on last retry", func() {
 		// wait running pod deleted
 		curjob, err := e2eutil.VcClient.BatchV1alpha1().Jobs(job.Namespace).Get(context.TODO(), jobName, metav1.GetOptions{})
 		Expect(err).NotTo(HaveOccurred())
-		fmt.Println("=============1=============", curjob)
-		fmt.Println("=============2=============", curjob.Status)
-		fmt.Println("=============3=============", curjob.Status.RetryCount)
+		raw, _ := json.Marshal(curjob.Status)
+		fmt.Println("=============1=============", string(raw))
+		fmt.Println("=============2=============", curjob.Status.RetryCount)
+		pods := e2eutil.GetTasksOfJob(ctx, job)
+		raw, _ = json.Marshal(pods)
+		fmt.Println("=============3=============", string(raw))
+
 		err = e2eutil.WaitPodGone(ctx, jobctl.MakePodName(jobName, "running-task", 0), job.Namespace)
 		Expect(err).NotTo(HaveOccurred())
 
