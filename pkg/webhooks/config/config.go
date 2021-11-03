@@ -55,6 +55,10 @@ var admissionConf AdmissionConfiguration
 
 // LoadAdmissionConf parse the configuration from config path
 func LoadAdmissionConf(confPath string) *AdmissionConfiguration {
+	if confPath == "" {
+		return nil
+	}
+
 	configBytes, err := readAdmissionConf(confPath)
 	if err != nil {
 		klog.Errorf("read admission file failed, err=%v", err)
@@ -87,7 +91,8 @@ func WatchAdmissionConf(path string, stopCh chan os.Signal) {
 	dirPath := filepath.Dir(path)
 	fileWatcher, err := filewatcher.NewFileWatcher(dirPath)
 	if err != nil {
-		klog.Errorf("failed creating filewatcher for %s: %v", path, err)
+		klog.Errorf("failed to create filewatcher for %s: %v", path, err)
+		return
 	}
 
 	eventCh := fileWatcher.Events()

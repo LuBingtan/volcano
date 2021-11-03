@@ -56,9 +56,9 @@ func Run(config *options.Config) error {
 
 	admissionConf := wkconfig.LoadAdmissionConf(config.ConfigPath)
 	if admissionConf == nil {
-		klog.Errorf("loadSchedulerConf failed.")
+		klog.Errorf("loadAdmissionConf failed.")
 	} else {
-		klog.V(2).Infof("loadSchedulerConf:%v", admissionConf.ResGroupsConfig)
+		klog.V(2).Infof("loadAdmissionConf:%v", admissionConf.ResGroupsConfig)
 	}
 
 	caBundle, err := ioutil.ReadFile(config.CaCertFile)
@@ -75,6 +75,7 @@ func Run(config *options.Config) error {
 	router.ForEachAdmission(config, func(service *router.AdmissionService) {
 		if service.Config != nil {
 			service.Config.VolcanoClient = vClient
+			service.Config.KubeClient = kubeClient
 			service.Config.SchedulerName = config.SchedulerName
 			service.Config.Recorder = recorder
 			service.Config.ConfigData = admissionConf
@@ -105,7 +106,10 @@ func Run(config *options.Config) error {
 		klog.Info("Volcano Webhook manager started.")
 	}()
 
-	go wkconfig.WatchAdmissionConf(config.ConfigPath, stopChannel)
+	if config.ConfigPath != "" {
+		go wkconfig.WatchAdmissionConf(config.ConfigPath, stopChannel)
+	}
+
 	select {
 	case <-stopChannel:
 		if err := server.Close(); err != nil {
